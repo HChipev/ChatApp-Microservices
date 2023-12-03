@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  chat_app_microservices:
+    container_name: chat_app_microservices
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_CSE_ID: ${GOOGLE_CSE_ID}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      PINECONE_API_KEY: ${PINECONE_API_KEY}
+      PINECONE_ENVIRONMENT: ${PINECONE_ENVIRONMENT}
+      INDEX_NAME: ${INDEX_NAME}
