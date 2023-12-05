@@ -9,7 +9,7 @@ from langchain.chains import RetrievalQA
 from langchain_experimental.llm_symbolic_math.base import LLMSymbolicMathChain
 from langchain.vectorstores import Pinecone
 from langchain.embeddings import OpenAIEmbeddings
-from langchain.agents import AgentType, Tool, ConversationalAgent, AgentExecutor
+from langchain.agents import AgentType, Tool, ConversationalChatAgent, AgentExecutor
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import initialize_agent
@@ -88,31 +88,30 @@ search_tool = Tool(
 
 tools=[retriever_tool, search_tool, math_tool]
 
-prefix = """Answer the following questions as best you can like you have a conversation. You have access to the following tools:"""
-format_instructions = """Use the following format:
+system_message = """Answer the following questions as best you can like you have a conversation. You have access to the following tools:
+
+Use the following format:
 
 Question: the input question you must answer
 Thought: you should always think about what to do
-Action: the action to take, should be one of [{tool_names}]
+Action: the action to take
 Action Input: the input to the action
 Observation: the result of the action
 ... (this Thought/Action/Action Input/Observation can repeat N times)
 Thought: I now know the final answer
-Final Answer: the final answer to the original input question"""
+Final Answer: the final answer to the original input question
 
-suffix = """Begin!
+Begin!
 
 Question: {input}
 
 {agent_scratchpad}"""
 
-prompt = ConversationalAgent.create_prompt(
-    tools,
-    prefix=prefix,
-    format_instructions=format_instructions,
-    suffix=suffix,
-    input_variables=["input", "agent_scratchpad"],
-)
+# prompt = ConversationalChatAgent.create_prompt(
+#     tools,
+#     system_message=system_message,
+#     input_variables=["input", "agent_scratchpad"],
+# )
 
 memory = ConversationBufferWindowMemory(
     memory_key="chat_history",
@@ -131,9 +130,10 @@ agent = initialize_agent(
     handle_parsing_errors=True,
     return_intermediate_steps=False,
     agent_kwargs={
-        'prefix': prefix, 
-        'format_instructions': format_instructions,
-        'suffix': suffix
+        'system_message': system_message, 
+        # 'input_variables': ["input", "agent_scratchpad",]
+        # 'format_instructions': format_instructions,
+        # 'suffix': suffix
     }
 )
 
@@ -144,7 +144,7 @@ def callback(ch, method, properties, body):
     json_string = body.decode('utf-8')
     data = json.loads(json_string)
 
-    result = agent(data["Question"])
+    result = agent({"input": data["Question"]})
     print(result)
 
 credentials = pika.PlainCredentials(os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"])
