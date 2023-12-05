@@ -26,9 +26,15 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
         self.content += token
         if self.final_answer:
             if '"action_input": "' in self.content:
-                if token not in ['"', "}","}\n","```"]:
+                if token not in ['"', "}","}\n","```",' "']:
 
-                    print(f"@{token}@")
+                    if token in ['."','."\n','. "']:
+                        token = "."
+                    if token in ['?"', '?"\n', '? "']:
+                        token = '?'
+                    if token in ['!"', '!"\n', '! "']:
+                        token = '!'
+
                     self.sio.emit("next_token", {"token": token})
                     eventlet.sleep(0)
         elif "Final Answer" in self.content:

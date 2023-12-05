@@ -88,24 +88,24 @@ search_tool = Tool(
 
 tools=[retriever_tool, search_tool, math_tool]
 
-system_message = """Answer the following questions as best you can like you have a conversation. You have access to the following tools:
+# system_message = """Answer the following questions as best you can like you have a conversation. You have access to the following tools:
 
-Use the following format:
+# Use the following format:
 
-Question: the input question you must answer
-Thought: you should always think about what to do
-Action: the action to take
-Action Input: the input to the action
-Observation: the result of the action
-... (this Thought/Action/Action Input/Observation can repeat N times)
-Thought: I now know the final answer
-Final Answer: the final answer to the original input question
+# Question: the input question you must answer
+# Thought: you should always think about what to do
+# Action: the action to take
+# Action Input: the input to the action
+# Observation: the result of the action
+# ... (this Thought/Action/Action Input/Observation can repeat N times)
+# Thought: I now know the final answer
+# Final Answer: the final answer to the original input question
 
-Begin!
+# Begin!
 
-Question: {input}
+# Question: {input}
 
-{agent_scratchpad}"""
+# {agent_scratchpad}"""
 
 # prompt = ConversationalChatAgent.create_prompt(
 #     tools,
@@ -130,7 +130,7 @@ agent = initialize_agent(
     handle_parsing_errors=True,
     return_intermediate_steps=False,
     agent_kwargs={
-        'system_message': system_message, 
+        # 'system_message': system_message, 
         # 'input_variables': ["input", "agent_scratchpad",]
         # 'format_instructions': format_instructions,
         # 'suffix': suffix
