@@ -1,4 +1,5 @@
 import os
+import ast
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_experimental.llm_symbolic_math.base import LLMSymbolicMathChain
@@ -9,6 +10,9 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import initialize_agent
 from classes import StreamAgentAnswerCallbackHandler
+from langchain.memory import ChatMessageHistory
+from langchain_core.messages import AIMessage, HumanMessage
+
 import pinecone
 
 def init_pinecone():
@@ -71,11 +75,16 @@ def ask_agent(question, sio, messages):
 
 
     memory = ConversationBufferWindowMemory(
-        chat_memory=messages,
         memory_key="chat_history",
-        k=5,
+        k=8,
         return_messages=True
     )
+    print(ast.literal_eval(messages),"§§§§§§§§§§§§§§§§§§§§§§§")
+    for index, message in enumerate(ast.literal_eval(messages)):
+            if index % 2 == 0:
+                memory.chat_memory.add_user_message(message)
+            else:
+                memory.chat_memory.add_ai_message(message)
 
     agent = initialize_agent(
         agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
@@ -95,4 +104,13 @@ def ask_agent(question, sio, messages):
         }
     )
 
-    return agent({"input": question})
+    response = agent({"input": question})
+
+    chat_history = []
+    for message in memory.chat_memory.messages:
+       chat_history.append(message.content)
+
+    return {
+       "response": response,
+       "chat_history": str(chat_history)
+       }

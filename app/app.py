@@ -1,4 +1,5 @@
 import os
+import ast
 import json
 import pika
 import eventlet
@@ -7,7 +8,6 @@ from flask import Flask
 from rabbitmq import consume_generate_question_messages, publish_generate_answer_messages
 from rag import ask_agent, init_pinecone
 from dotenv import load_dotenv
-from langchain.memory import ChatMessageHistory
 
 app = Flask(__name__)
 sio = socketio.Server(cors_allowed_origins='*')
@@ -42,12 +42,15 @@ def consume_messages():
         json_string = body.decode('utf-8')
         data = json.loads(json_string)
 
-        result = ask_agent(question=data["Question"], sio=sio, messages=ChatMessageHistory(messages=[]))
+        agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"])
+        print(agent_output["chat_history"])
 
         message = {
-            "Question": result["input"],
-            "Answer": result["output"],
-            "ChatHistory": result["chat_history"]
+            "UserId": data["UserId"],
+            "ConversationId": data["ConversationId"],
+            "Question": agent_output["response"]["input"],
+            "Answer": agent_output["response"]["output"],
+            "ChatHistory": agent_output["chat_history"]
         }
         publish_generate_answer_messages(channel=channel, message=json.dumps(message))
 
