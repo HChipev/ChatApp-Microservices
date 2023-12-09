@@ -1,11 +1,11 @@
 from enum import Enum
 import eventlet
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 
-class FileType(Enum):
+class DocumentType(Enum):
     PDF = 1
     PPTX = 2
     DOCX = 3
@@ -21,7 +21,7 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
 
     def on_chat_model_start(self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], *, run_id: UUID, parent_run_id: UUID | None = None, tags: List[str] | None = None, metadata: Dict[str, Any] | None = None, **kwargs: Any) -> Any:
         pass
-        
+
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.content += token
         if self.final_answer:
@@ -35,7 +35,7 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
                     if token in ['!"', '!"\n', '! "']:
                         token = '!'
 
-                    self.sio.emit("next_token", {"token": token})
+                    self.sio.emit("next_token", {"token": token, "done": False})
                     eventlet.sleep(0)
         elif "Final Answer" in self.content:
             self.final_answer = True

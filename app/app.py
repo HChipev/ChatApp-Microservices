@@ -1,11 +1,12 @@
 import os
-import ast
+import asyncio
 import json
 import pika
 import eventlet
 import socketio
 from flask import Flask
-from rabbitmq import consume_generate_question_messages, publish_generate_answer_messages
+from load_documents import insert_documents_to_pinecone
+from rabbitmq import consume_generate_question_messages, consume_load_documents_messages, publish_generate_answer_messages, publish_save_documents_messages
 from rag import ask_agent, init_pinecone
 from dotenv import load_dotenv
 
@@ -36,14 +37,13 @@ def consume_messages():
     channel = connection.channel()
 
     def ask_agent_callback(ch, method, properties, body):
-        sio.emit("add_entry")
-        eventlet.sleep(0)
-
         json_string = body.decode('utf-8')
         data = json.loads(json_string)
 
         agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"])
-        print(agent_output["chat_history"])
+        sio.emit("next_token", {"text": agent_output["response"]["output"], "done": True})
+        eventlet.sleep(0)
+
 
         message = {
             "UserId": data["UserId"],
@@ -54,7 +54,22 @@ def consume_messages():
         }
         publish_generate_answer_messages(channel=channel, message=json.dumps(message))
 
+    def load_documents_callback(ch, method, properties, body):
+        json_string = body.decode('utf-8')
+        data = json.loads(json_string)
+
+        documents = asyncio.run(insert_documents_to_pinecone(documents=data["Documents"]))
+
+        message = {
+            "Documents": documents
+        }
+
+        publish_save_documents_messages(channel=channel, message=json.dumps(message))
+
+
     consume_generate_question_messages(channel=channel, callback=ask_agent_callback)
+
+    consume_load_documents_messages(channel=channel, callback=load_documents_callback)
     
     channel.start_consuming()
 

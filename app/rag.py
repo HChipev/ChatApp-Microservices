@@ -1,5 +1,6 @@
 import os
 import ast
+import eventlet
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_experimental.llm_symbolic_math.base import LLMSymbolicMathChain
@@ -10,16 +11,14 @@ from langchain.memory import ConversationBufferWindowMemory
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import initialize_agent
 from classes import StreamAgentAnswerCallbackHandler
-from langchain.memory import ChatMessageHistory
-from langchain_core.messages import AIMessage, HumanMessage
 
 import pinecone
 
 def init_pinecone():
-  pinecone.init(
-    api_key=os.environ["PINECONE_API_KEY"], 
-    environment=os.environ["PINECONE_ENVIRONMENT"],
-)
+    pinecone.init(
+        api_key=os.environ["PINECONE_API_KEY"], 
+        environment=os.environ["PINECONE_ENVIRONMENT"],
+    ) 
   
 def ask_agent(question, sio, messages):
     llm = ChatOpenAI(
@@ -27,7 +26,7 @@ def ask_agent(question, sio, messages):
         # model="gpt-4-1106-preview",
         model="gpt-3.5-turbo",
         streaming=True,
-        temperature=0,
+        temperature=0.3,
         callbacks=[StreamAgentAnswerCallbackHandler(sio=sio)]
     )
 
@@ -76,10 +75,10 @@ def ask_agent(question, sio, messages):
 
     memory = ConversationBufferWindowMemory(
         memory_key="chat_history",
-        k=8,
+        k=4,
         return_messages=True
     )
-    print(ast.literal_eval(messages),"§§§§§§§§§§§§§§§§§§§§§§§")
+
     for index, message in enumerate(ast.literal_eval(messages)):
             if index % 2 == 0:
                 memory.chat_memory.add_user_message(message)
@@ -96,13 +95,16 @@ def ask_agent(question, sio, messages):
         memory=memory,
         handle_parsing_errors=True,
         return_intermediate_steps=False,
-        agent_kwargs={
-            # 'system_message': system_message, 
-            # 'input_variables': ["input", "agent_scratchpad",]
-            # 'format_instructions': format_instructions,
-            # 'suffix': suffix
-        }
+        # agent_kwargs={
+        #     # 'system_message': system_message, 
+        #     # 'input_variables': ["input", "agent_scratchpad",]
+        #     # 'format_instructions': format_instructions,
+        #     # 'suffix': suffix
+        # }
     )
+
+    sio.emit("next_token", {"start": True, "done": False})
+    eventlet.sleep(0)
 
     response = agent({"input": question})
 

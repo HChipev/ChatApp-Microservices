@@ -1,37 +1,51 @@
+import os
+import PyPDF2
+import base64
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Pinecone
+from langchain.vectorstores.pinecone import Pinecone
 from langchain.embeddings import OpenAIEmbeddings
 from io import BytesIO
-from classes import FileType
+from classes import DocumentType
 from pptx import Presentation
 from docx import Document
 from bs4 import BeautifulSoup
-import fitz
+import eventlet
+eventlet.monkey_patch()
 
-def insert_documents_to_pinecone(index_name, documents):
+async def insert_documents_to_pinecone(documents):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
         chunk_overlap=0
     )
 
     for document in documents:
-        
-        if document.doc_type == FileType.PDF:
-            document_text = __extract_text_from_pdf_bytes(document.content)
-        elif document.doc_type == FileType.PPTX:
-            document_text = __extract_text_from_pptx_bytes(document.content)
-        elif document.doc_type == FileType.DOCX:
-            document_text = __extract_text_from_docx_bytes(document.content)
-        elif document.doc_type == FileType.HTML:
-            document_text = __extract_text_from_html_bytes(document.content)
-        elif document.doc_type == FileType.TXT:
-            document_text = __extract_text_from_txt_bytes(document.content)
+        document_bytes = base64.b64decode(document["Bytes"])
+        if document["Type"] == DocumentType.PDF.value:
+            document_text = __extract_text_from_pdf_bytes(document_bytes)
+        elif document["Type"] == DocumentType.PPTX.value:
+            document_text = __extract_text_from_pptx_bytes(document_bytes)
+        elif document["Type"] == DocumentType.DOCX.value:
+            document_text = __extract_text_from_docx_bytes(document_bytes)
+        elif document["Type"] == DocumentType.HTML.value:
+            document_text = __extract_text_from_html_bytes(document_bytes)
+        elif document["Type"] == DocumentType.TXT.value:
+            document_text = __extract_text_from_txt_bytes(document_bytes)
         else:
             continue
 
         chunks = text_splitter.create_documents([document_text])
+    
+        try:
+            index = Pinecone.get_pinecone_index(index_name=os.environ["INDEX_NAME"])
+            vector_store = Pinecone(index=index, embedding=OpenAIEmbeddings(), text_key="text")
 
-        Pinecone.from_documents(chunks,OpenAIEmbeddings(),index_name=index_name)
+            vectors = await vector_store.aadd_documents(documents=chunks)
+
+            document["VectorIds"] = vectors
+        except Exception as e:
+            print(f"An error occurred: {e}")  
+
+    return documents
     
 
 def __extract_text_from_pptx_bytes(pptx_bytes):
@@ -57,10 +71,13 @@ def __extract_text_from_html_bytes(html_bytes):
 def __extract_text_from_txt_bytes(txt_bytes):
     return txt_bytes.decode('utf-8')
 
+
 def __extract_text_from_pdf_bytes(pdf_bytes):
-    pdf_document = fitz.open("pdf", pdf_bytes)
     text = ''
-    for page_num in range(pdf_document.page_count):
-        page = pdf_document[page_num]
-        text += page.get_text()
+    with BytesIO(pdf_bytes) as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+        num_pages = len(pdf_reader.pages)
+        for page_num in range(num_pages):
+            page = pdf_reader.pages[page_num]
+            text += page.extract_text()
     return text
