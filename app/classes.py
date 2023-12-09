@@ -1,6 +1,6 @@
 from enum import Enum
 import eventlet
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from uuid import UUID
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
