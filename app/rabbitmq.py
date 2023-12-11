@@ -12,6 +12,13 @@ def consume_load_documents_messages(channel, callback):
 
     print('Waiting for messages in queue: LoadDocumentsQueue.')
 
+def consume_delete_documents_messages(channel, callback):
+    channel.queue_declare(queue='DeleteDocumentsQueue', durable=True, exclusive=False, auto_delete=True)
+
+    channel.basic_consume(queue='DeleteDocumentsQueue', on_message_callback=callback, auto_ack=True)
+
+    print('Waiting for messages in queue: DeleteDocumentsQueue.')
+
 def publish_generate_answer_messages(channel, message):
     channel.queue_declare(queue='GenerateAnswerQueue', durable=True, exclusive=False, auto_delete=True)
 

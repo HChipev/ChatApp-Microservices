@@ -47,6 +47,16 @@ async def insert_documents_to_pinecone(documents):
 
     return documents
     
+def remove_documents_from_pinecone(documents):
+        for document in documents:
+            try:
+                index = Pinecone.get_pinecone_index(index_name=os.environ["INDEX_NAME"])
+                vector_store = Pinecone(index=index, embedding=OpenAIEmbeddings(), text_key="text")
+
+                vector_store.delete(document["VectorIds"])
+
+            except Exception as e:
+                print(f"An error occurred: {e}") 
 
 def __extract_text_from_pptx_bytes(pptx_bytes):
     prs = Presentation(BytesIO(pptx_bytes))

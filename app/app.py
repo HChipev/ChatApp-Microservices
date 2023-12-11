@@ -5,8 +5,8 @@ import pika
 import eventlet
 import socketio
 from flask import Flask
-from load_documents import insert_documents_to_pinecone
-from rabbitmq import consume_generate_question_messages, consume_load_documents_messages, publish_generate_answer_messages, publish_save_documents_messages
+from documents import insert_documents_to_pinecone, remove_documents_from_pinecone
+from rabbitmq import consume_delete_documents_messages, consume_generate_question_messages, consume_load_documents_messages, publish_generate_answer_messages, publish_save_documents_messages
 from rag import ask_agent, init_pinecone
 from dotenv import load_dotenv
 
@@ -66,10 +66,17 @@ def consume_messages():
 
         publish_save_documents_messages(channel=channel, message=json.dumps(message))
 
+    def delete_documents_callback(ch, method, properties, body):
+        json_string = body.decode('utf-8')
+        data = json.loads(json_string)
+
+        remove_documents_from_pinecone(documents=data["Documents"])
 
     consume_generate_question_messages(channel=channel, callback=ask_agent_callback)
 
     consume_load_documents_messages(channel=channel, callback=load_documents_callback)
+
+    consume_delete_documents_messages(channel=channel, callback=delete_documents_callback)
     
     channel.start_consuming()
 
