@@ -40,19 +40,25 @@ def consume_messages():
         json_string = body.decode('utf-8')
         data = json.loads(json_string)
 
-        agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"])
-        sio.emit("next_token", {"text": agent_output["response"]["output"], "done": True})
-        eventlet.sleep(0)
+        try:
+            agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"])
+            sio.emit("next_token", {"text": agent_output["response"]["output"], "done": True})
+            eventlet.sleep(0)
 
-
-        message = {
-            "UserId": data["UserId"],
-            "ConversationId": data["ConversationId"],
-            "Question": agent_output["response"]["input"],
-            "Answer": agent_output["response"]["output"],
-            "ChatHistory": agent_output["chat_history"]
-        }
-        publish_generate_answer_messages(channel=channel, message=json.dumps(message))
+            message = {
+                "UserId": data["UserId"],
+                "ConversationId": data["ConversationId"],
+                "Question": agent_output["response"]["input"],
+                "Answer": agent_output["response"]["output"],
+                "ChatHistory": agent_output["chat_history"]
+            }
+            publish_generate_answer_messages(channel=channel, message=json.dumps(message))
+        except Exception as e:
+            print(f"An error occurred: {e}") 
+            sio.emit("next_token", {"text":"Error has occurred!", "error": True})
+            eventlet.sleep(0)
+       
+        
 
     def load_documents_callback(ch, method, properties, body):
         json_string = body.decode('utf-8')
