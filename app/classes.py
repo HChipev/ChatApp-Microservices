@@ -15,9 +15,10 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
     content: str = ""
     final_answer: bool = False
     
-    def __init__(self, sio) -> None:
+    def __init__(self, sio, sid) -> None:
         super().__init__()
         self.sio = sio
+        self.sid = sid
 
     def on_chat_model_start(self, serialized: Dict[str, Any], messages: List[List[BaseMessage]], *, run_id: UUID, parent_run_id: UUID | None = None, tags: List[str] | None = None, metadata: Dict[str, Any] | None = None, **kwargs: Any) -> Any:
         pass
@@ -35,7 +36,7 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
                     if token in ['!"', '!"\n', '! "']:
                         token = '!'
 
-                    self.sio.emit("next_token", {"token": token, "done": False})
+                    self.sio.emit("next_token", {"token": token, "done": False}, self.sid)
                     eventlet.sleep(0)
         elif "Final Answer" in self.content:
             self.final_answer = True

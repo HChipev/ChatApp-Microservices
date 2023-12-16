@@ -41,8 +41,8 @@ def consume_messages():
         data = json.loads(json_string)
 
         try:
-            agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"])
-            sio.emit("next_token", {"text": agent_output["response"]["output"], "done": True})
+            agent_output = ask_agent(question=data["Question"], sio=sio, messages=data["ChatHistory"], sid=data["Sid"])
+            sio.emit("next_token", {"text": agent_output["response"]["output"], "done": True}, data["Sid"])
             eventlet.sleep(0)
 
             message = {
@@ -55,7 +55,7 @@ def consume_messages():
             publish_generate_answer_messages(channel=channel, message=json.dumps(message))
         except Exception as e:
             print(f"An error occurred: {e}") 
-            sio.emit("next_token", {"text":"Error has occurred!", "error": True})
+            sio.emit("next_token", {"text":"Error has occurred!", "error": True}, room=data["Sid"])
             eventlet.sleep(0)
        
         

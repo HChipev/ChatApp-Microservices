@@ -20,14 +20,14 @@ def init_pinecone():
         environment=os.environ["PINECONE_ENVIRONMENT"],
     ) 
   
-def ask_agent(question, sio, messages):
+def ask_agent(question, sio, messages, sid):
     llm = ChatOpenAI(
         openai_api_key=os.environ["OPENAI_API_KEY"],
         # model="gpt-4-1106-preview",
         model="gpt-3.5-turbo",
         streaming=True,
         temperature=0.3,
-        callbacks=[StreamAgentAnswerCallbackHandler(sio=sio)]
+        callbacks=[StreamAgentAnswerCallbackHandler(sio=sio, sid=sid)]
     )
 
 
@@ -103,7 +103,7 @@ def ask_agent(question, sio, messages):
         # }
     )
 
-    sio.emit("next_token", {"start": True, "done": False})
+    sio.emit("next_token", {"start": True, "done": False}, sid)
     eventlet.sleep(0)
 
     response = agent({"input": question})
