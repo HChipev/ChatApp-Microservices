@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 import eventlet
 eventlet.monkey_patch()
 
+
 async def insert_documents_to_pinecone(documents):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=1000,
@@ -34,29 +35,35 @@ async def insert_documents_to_pinecone(documents):
             continue
 
         chunks = text_splitter.create_documents([document_text])
-    
+
         try:
-            index = Pinecone.get_pinecone_index(index_name=os.environ["INDEX_NAME"])
-            vector_store = Pinecone(index=index, embedding=OpenAIEmbeddings(), text_key="text")
+            index = Pinecone.get_pinecone_index(
+                index_name=os.environ["INDEX_NAME"])
+            vector_store = Pinecone(
+                index=index, embedding=OpenAIEmbeddings(), text_key="text")
 
             vectors = await vector_store.aadd_documents(documents=chunks)
 
             document["VectorIds"] = vectors
         except Exception as e:
-            print(f"An error occurred: {e}")  
+            print(f"An error occurred: {e}")
 
     return documents
-    
+
+
 def remove_documents_from_pinecone(documents):
-        for document in documents:
-            try:
-                index = Pinecone.get_pinecone_index(index_name=os.environ["INDEX_NAME"])
-                vector_store = Pinecone(index=index, embedding=OpenAIEmbeddings(), text_key="text")
+    for document in documents:
+        try:
+            index = Pinecone.get_pinecone_index(
+                index_name=os.environ["INDEX_NAME"])
+            vector_store = Pinecone(
+                index=index, embedding=OpenAIEmbeddings(), text_key="text")
 
-                vector_store.delete(document["VectorIds"])
+            vector_store.delete(document["VectorIds"])
 
-            except Exception as e:
-                print(f"An error occurred: {e}") 
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 
 def __extract_text_from_pptx_bytes(pptx_bytes):
     prs = Presentation(BytesIO(pptx_bytes))
@@ -67,6 +74,7 @@ def __extract_text_from_pptx_bytes(pptx_bytes):
                 text += shape.text + '\n'
     return text
 
+
 def __extract_text_from_docx_bytes(docx_bytes):
     doc = Document(BytesIO(docx_bytes))
     text = ''
@@ -74,9 +82,11 @@ def __extract_text_from_docx_bytes(docx_bytes):
         text += paragraph.text + '\n'
     return text
 
+
 def __extract_text_from_html_bytes(html_bytes):
     soup = BeautifulSoup(html_bytes, 'html.parser')
     return soup.get_text()
+
 
 def __extract_text_from_txt_bytes(txt_bytes):
     return txt_bytes.decode('utf-8')

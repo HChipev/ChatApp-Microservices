@@ -14,12 +14,14 @@ from classes import StreamAgentAnswerCallbackHandler
 
 import pinecone
 
+
 def init_pinecone():
     pinecone.init(
-        api_key=os.environ["PINECONE_API_KEY"], 
+        api_key=os.environ["PINECONE_API_KEY"],
         environment=os.environ["PINECONE_ENVIRONMENT"],
-    ) 
-  
+    )
+
+
 def ask_agent(question, sio, messages, sid):
     llm = ChatOpenAI(
         openai_api_key=os.environ["OPENAI_API_KEY"],
@@ -30,9 +32,8 @@ def ask_agent(question, sio, messages, sid):
         callbacks=[StreamAgentAnswerCallbackHandler(sio=sio, sid=sid)]
     )
 
-
-
-    retriever=Pinecone.from_existing_index(index_name=os.environ["INDEX_NAME"], embedding=OpenAIEmbeddings()).as_retriever(search_kwargs={"k":3})
+    retriever = Pinecone.from_existing_index(
+        index_name=os.environ["INDEX_NAME"], embedding=OpenAIEmbeddings()).as_retriever(search_kwargs={"k": 3})
 
     qa = RetrievalQA.from_chain_type(
         llm=llm,
@@ -70,8 +71,7 @@ def ask_agent(question, sio, messages, sid):
         )
     )
 
-    tools=[retriever_tool, search_tool, math_tool]
-
+    tools = [retriever_tool, search_tool, math_tool]
 
     memory = ConversationBufferWindowMemory(
         memory_key="chat_history",
@@ -80,10 +80,10 @@ def ask_agent(question, sio, messages, sid):
     )
 
     for index, message in enumerate(ast.literal_eval(messages)):
-            if index % 2 == 0:
-                memory.chat_memory.add_user_message(message)
-            else:
-                memory.chat_memory.add_ai_message(message)
+        if index % 2 == 0:
+            memory.chat_memory.add_user_message(message)
+        else:
+            memory.chat_memory.add_ai_message(message)
 
     agent = initialize_agent(
         agent=AgentType.CHAT_CONVERSATIONAL_REACT_DESCRIPTION,
@@ -96,7 +96,7 @@ def ask_agent(question, sio, messages, sid):
         handle_parsing_errors=True,
         return_intermediate_steps=False,
         # agent_kwargs={
-        #     # 'system_message': system_message, 
+        #     # 'system_message': system_message,
         #     # 'input_variables': ["input", "agent_scratchpad",]
         #     # 'format_instructions': format_instructions,
         #     # 'suffix': suffix
@@ -104,15 +104,14 @@ def ask_agent(question, sio, messages, sid):
     )
 
     sio.emit("next_token", {"start": True, "done": False}, sid)
-    eventlet.sleep(0)
 
     response = agent({"input": question})
 
     chat_history = []
     for message in memory.chat_memory.messages:
-       chat_history.append(message.content)
+        chat_history.append(message.content)
 
     return {
-       "response": response,
-       "chat_history": str(chat_history)
-       }
+        "response": response,
+        "chat_history": str(chat_history)
+    }

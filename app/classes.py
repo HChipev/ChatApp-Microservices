@@ -5,16 +5,19 @@ from uuid import UUID
 from langchain.callbacks.base import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 
+
 class DocumentType(Enum):
     PDF = 1
     PPTX = 2
     DOCX = 3
     HTML = 4
     TXT = 5
+
+
 class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
     content: str = ""
     final_answer: bool = False
-    
+
     def __init__(self, sio, sid) -> None:
         super().__init__()
         self.sio = sio
@@ -27,21 +30,22 @@ class StreamAgentAnswerCallbackHandler(BaseCallbackHandler):
         self.content += token
         if self.final_answer:
             if '"action_input": "' in self.content:
-                if token not in ['"', "}","}\n","```",' "']:
+                if token not in ['"', "}", "}\n", "```", ' "']:
 
-                    if token in ['."','."\n','. "']:
+                    if token in ['."', '."\n', '. "']:
                         token = "."
                     if token in ['?"', '?"\n', '? "']:
                         token = '?'
                     if token in ['!"', '!"\n', '! "']:
                         token = '!'
 
-                    self.sio.emit("next_token", {"token": token, "done": False}, self.sid)
+                    self.sio.emit(
+                        "next_token", {"token": token, "done": False}, self.sid)
                     eventlet.sleep(0)
         elif "Final Answer" in self.content:
             self.final_answer = True
             self.content = ""
-    
+
     def on_llm_end(self, response, **kwargs) -> None:
         if self.final_answer:
             self.content = ""
