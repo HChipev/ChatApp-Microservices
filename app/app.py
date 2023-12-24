@@ -39,9 +39,9 @@ def ask_agent_callback(ch, method, properties, body):
 
     try:
         agent_output = ask_agent(
-            question=data["Question"], sio=sio, messages=data["ChatHistory"], sid=data["Sid"])
+            question=data["Question"], sio=sio, messages=data["ChatHistory"], sid=data["Sid"], conversationId=data["ConversationId"])
         sio.emit("next_token", {
-            "text": agent_output["response"]["output"], "done": True}, data["Sid"])
+            "text": agent_output["response"]["output"], "done": True,  "conversationId": data["ConversationId"]}, data["Sid"])
 
         message = {
             "UserId": data["UserId"],
@@ -60,7 +60,7 @@ def ask_agent_callback(ch, method, properties, body):
     except Exception as e:
         print(f"An error occurred: {e}")
         sio.emit("next_token", {
-            "text": "Error has occurred!", "error": True}, room=data["Sid"])
+            "text": "Error has occurred!", "error": True, "conversationId": data["ConversationId"]}, room=data["Sid"])
 
 
 def load_documents_callback(ch, method, properties, body):
