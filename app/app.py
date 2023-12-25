@@ -122,4 +122,4 @@ def consume_messages():
 
 if __name__ == "__main__":
     eventlet.spawn(consume_messages)
-    eventlet.wsgi.server(eventlet.listen(('127.0.0.1', 3000)), app)
+    eventlet.wsgi.server(eventlet.listen(os.environ.get("BASE_URL")), app)
