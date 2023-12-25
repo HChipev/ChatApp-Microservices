@@ -15,4 +15,3 @@ PyPDF2
 gunicorn
 python-socketio
 asyncio
-pinecone
