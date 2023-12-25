@@ -121,5 +121,11 @@ def consume_messages():
 
 
 if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+
+    base_url = os.environ.get("BASE_URL", "http://127.0.0.1")
+
+    print(f"Starting server at {base_url}:{port}")
+
     eventlet.spawn(consume_messages)
-    eventlet.wsgi.server(eventlet.listen(os.environ.get("BASE_URL")), app)
+    eventlet.wsgi.server(eventlet.listen((base_url, port)), app)
