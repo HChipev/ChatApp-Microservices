@@ -27,6 +27,8 @@ os.environ["RABBITMQ_USERNAME"] = os.getenv("RABBITMQ_USERNAME")
 os.environ["RABBITMQ_PASSWORD"] = os.getenv("RABBITMQ_PASSWORD")
 os.environ["RABBITMQ_VIRTUAL_HOST"] = os.getenv("RABBITMQ_VIRTUAL_HOST")
 
+init_pinecone()
+
 credentials = pika.PlainCredentials(
     os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"])
 
@@ -119,21 +121,5 @@ def consume_messages():
 
 
 if __name__ == "__main__":
-    import logging
-
-    logging.basicConfig(level=logging.DEBUG)
-
-    try:
-        init_pinecone()
-        logging.info("Pinecone initialized successfully.")
-
-        port = int(os.environ.get("PORT", 3000))
-
-        consume_messages()
-        # eventlet.spawn(eventlet.wsgi.server,
-        #                eventlet.listen(('0.0.0.0', port), app))
-        logging.info(f"Server started at 0.0.0.0:{port}")
-
-        eventlet.hubs.get_hub().run()
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
+    eventlet.spawn(consume_messages)
+    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 3000)), app)
