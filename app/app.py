@@ -103,6 +103,7 @@ def delete_documents_callback_wrapper(ch, method, properties, body):
 
 
 def consume_messages():
+    print("==================================================================================================================================================================================================================================================================================================================")
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         os.environ["RABBITMQ_HOSTNAME"], 5672, os.environ["RABBITMQ_VIRTUAL_HOST"], credentials))
 
