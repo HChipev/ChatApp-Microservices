@@ -11,3 +11,4 @@ python-pptx
 pika
 google-api-python-client
 PyPDF2
+gunicorn
