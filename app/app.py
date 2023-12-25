@@ -119,10 +119,21 @@ def consume_messages():
 
 
 if __name__ == "__main__":
-    init_pinecone()
+    import logging
 
-    port = int(os.environ.get("PORT", 3000))
+    logging.basicConfig(level=logging.DEBUG)
 
-    eventlet.spawn(consume_messages)
-    eventlet.spawn(eventlet.wsgi.server,
-                   eventlet.listen(('0.0.0.0', port), app))
+    try:
+        init_pinecone()
+        logging.info("Pinecone initialized successfully.")
+
+        port = int(os.environ.get("PORT", 3000))
+
+        eventlet.spawn(consume_messages)
+        eventlet.spawn(eventlet.wsgi.server,
+                       eventlet.listen(('0.0.0.0', port), app))
+        logging.info(f"Server started at 0.0.0.0:{port}")
+
+        eventlet.hubs.get_hub().run()
+    except Exception as e:
+        logging.error(f"An error occurred: {e}")
