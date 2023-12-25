@@ -121,5 +121,11 @@ def consume_messages():
 
 
 if __name__ == "__main__":
-    eventlet.spawn(consume_messages)
-    eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 3000)), app)
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == "worker":
+        # Run worker process
+        consume_messages()
+    else:
+        # Run web process
+        eventlet.wsgi.server(eventlet.listen(('0.0.0.0', 3000)), app)
