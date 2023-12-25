@@ -128,4 +128,4 @@ if __name__ == "__main__":
     print(f"Starting server at {base_url}:{port}")
 
     eventlet.spawn(consume_messages)
-    eventlet.wsgi.server(eventlet.listen((base_url, port)), app)
+    eventlet.wsgi.server(eventlet.listen(('', port)), app)
