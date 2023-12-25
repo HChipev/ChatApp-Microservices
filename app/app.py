@@ -72,7 +72,7 @@ def load_documents_callback(ch, method, properties, body):
         "Documents": documents
     }
 
-    with pika.BlockingConnection(pika.ConnectionParameters(os.environ["RABBITMQ_HOSTNAME"], 5672, os.environ["RABBITMQ_VIRTUAL_HOST"], credentials)) as connection:
+    with pika.BlockingConnection(pika.ConnectionParameters(os.environ["RABBITMQ_HOSTNAME"], os.environ["RABBITMQ_VIRTUAL_HOST"], credentials)) as connection:
         channel = connection.channel()
 
         publish_save_documents_messages(
@@ -121,10 +121,8 @@ def consume_messages():
 if __name__ == "__main__":
     init_pinecone()
 
-    port = int(os.environ.get("PORT", 5000))
-    print(f"Starting server at 0.0.0.0:{port}")
+    port = int(os.environ.get("PORT", 3000))
 
     eventlet.spawn(consume_messages)
     eventlet.spawn(eventlet.wsgi.server,
                    eventlet.listen(('0.0.0.0', port), app))
-    eventlet.hubs.get_hub().run()
