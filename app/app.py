@@ -130,8 +130,8 @@ if __name__ == "__main__":
         port = int(os.environ.get("PORT", 3000))
 
         eventlet.spawn(consume_messages)
-        eventlet.spawn(eventlet.wsgi.server,
-                       eventlet.listen(('0.0.0.0', port), app))
+        # eventlet.spawn(eventlet.wsgi.server,
+        #                eventlet.listen(('0.0.0.0', port), app))
         logging.info(f"Server started at 0.0.0.0:{port}")
 
         eventlet.hubs.get_hub().run()
