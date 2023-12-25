@@ -13,5 +13,5 @@ pika
 google-api-python-client
 PyPDF2
 gunicorn
-socketio
+python-socketio
 asyncio
