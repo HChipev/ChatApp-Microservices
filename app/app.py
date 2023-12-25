@@ -5,9 +5,9 @@ import pika
 import eventlet
 import socketio
 from flask import Flask
-from app.documents import insert_documents_to_pinecone, remove_documents_from_pinecone
-from app.rabbitmq import consume_delete_documents_messages, consume_generate_question_messages, consume_load_documents_messages, publish_generate_answer_messages, publish_save_documents_messages
-from app.rag import ask_agent, init_pinecone
+from documents import insert_documents_to_pinecone, remove_documents_from_pinecone
+from rabbitmq import consume_delete_documents_messages, consume_generate_question_messages, consume_load_documents_messages, publish_generate_answer_messages, publish_save_documents_messages
+from rag import ask_agent, init_pinecone
 from dotenv import load_dotenv
 
 app = Flask(__name__)
