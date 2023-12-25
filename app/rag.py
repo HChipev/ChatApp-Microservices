@@ -9,7 +9,7 @@ from langchain.agents import AgentType, Tool
 from langchain.memory import ConversationBufferWindowMemory
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.agents import initialize_agent
-from classes import StreamAgentAnswerCallbackHandler
+from app.classes import StreamAgentAnswerCallbackHandler
 
 import pinecone
 

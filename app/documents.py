@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.pinecone import Pinecone
 from langchain.embeddings import OpenAIEmbeddings
 from io import BytesIO
-from classes import DocumentType
+from app.classes import DocumentType
 from pptx import Presentation
 from docx import Document
 from bs4 import BeautifulSoup
