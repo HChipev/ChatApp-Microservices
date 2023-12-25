@@ -1,6 +1,5 @@
 import os
 import ast
-import eventlet
 from langchain.chat_models import ChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_experimental.llm_symbolic_math.base import LLMSymbolicMathChain
