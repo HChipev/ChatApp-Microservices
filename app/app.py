@@ -72,7 +72,7 @@ def load_documents_callback(ch, method, properties, body):
         "Documents": documents
     }
 
-    with pika.BlockingConnection(pika.ConnectionParameters(os.environ["RABBITMQ_HOSTNAME"], os.environ["RABBITMQ_VIRTUAL_HOST"], credentials)) as connection:
+    with pika.BlockingConnection(pika.ConnectionParameters(os.environ["RABBITMQ_HOSTNAME"], 5672, os.environ["RABBITMQ_VIRTUAL_HOST"], credentials)) as connection:
         channel = connection.channel()
 
         publish_save_documents_messages(
