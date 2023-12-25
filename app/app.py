@@ -27,8 +27,6 @@ os.environ["RABBITMQ_USERNAME"] = os.getenv("RABBITMQ_USERNAME")
 os.environ["RABBITMQ_PASSWORD"] = os.getenv("RABBITMQ_PASSWORD")
 os.environ["RABBITMQ_VIRTUAL_HOST"] = os.getenv("RABBITMQ_VIRTUAL_HOST")
 
-init_pinecone()
-
 credentials = pika.PlainCredentials(
     os.environ["RABBITMQ_USERNAME"], os.environ["RABBITMQ_PASSWORD"])
 
@@ -103,7 +101,6 @@ def delete_documents_callback_wrapper(ch, method, properties, body):
 
 
 def consume_messages():
-    print("==================================================================================================================================================================================================================================================================================================================")
     connection = pika.BlockingConnection(pika.ConnectionParameters(
         os.environ["RABBITMQ_HOSTNAME"], 5672, os.environ["RABBITMQ_VIRTUAL_HOST"], credentials))
 
@@ -122,11 +119,12 @@ def consume_messages():
 
 
 if __name__ == "__main__":
+    init_pinecone()
+
     port = int(os.environ.get("PORT", 5000))
-
-    base_url = os.environ.get("BASE_URL", "http://127.0.0.1")
-
-    print(f"Starting server at {base_url}:{port}")
+    print(f"Starting server at 0.0.0.0:{port}")
 
     eventlet.spawn(consume_messages)
-    eventlet.wsgi.server(eventlet.listen(('', port)), app)
+    eventlet.spawn(eventlet.wsgi.server,
+                   eventlet.listen(('0.0.0.0', port), app))
+    eventlet.hubs.get_hub().run()
